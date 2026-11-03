@@ -1,0 +1,49 @@
+name: Hoofbeat load test
+description: Run a Hoofbeat load test flow and fail the job when its pass/fail criteria fail.
+author: Hoofbeat
+branding:
+  icon: activity
+  color: purple
+inputs:
+  token:
+    description: A Hoofbeat API token (Settings → API tokens). Store it as a secret.
+    required: true
+  flow:
+    description: The id of the flow to run
+    required: true
+  url:
+    description: Your Hoofbeat URL
+    required: false
+    default: https://hoofbeat.dev
+  timeout-minutes:
+    description: How long to wait for the verdict
+    required: false
+    default: '60'
+  environment:
+    description: The project environment whose variables the run uses, e.g. staging
+    required: false
+    default: ''
+  base-url:
+    description: Test this URL instead of the flow's target, e.g. the pull request's preview (must be the verified host or a subdomain of it)
+    required: false
+    default: ''
+outputs:
+  run-url:
+    description: Link to the run in Hoofbeat
+    value: ${{ steps.run.outputs.run-url }}
+  passed:
+    description: true, false, or empty when the flow has no criteria
+    value: ${{ steps.run.outputs.passed }}
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      env:
+        HB_URL: ${{ inputs.url }}
+        HB_TOKEN: ${{ inputs.token }}
+        HB_FLOW: ${{ inputs.flow }}
+        HB_TIMEOUT: ${{ inputs.timeout-minutes }}
+        HB_ENV: ${{ inputs.environment }}
+        HB_BASE_URL: ${{ inputs.base-url }}
+      run: bash "${{ github.action_path }}/run.sh"
